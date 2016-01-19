@@ -6,6 +6,7 @@ classdef SplineGUI < handle
         cs
         h_fig
         h_ax
+        h_bt
         h_plt_line
         h_plt_ctrlpt
         h_plt_hpt % highlighted point
@@ -20,15 +21,15 @@ classdef SplineGUI < handle
             self.cs = spline(x, y);
             %% setup GUI
             self.setupUI();
-            %self.timerS= timer();
-            %set(self.timerS,'TimerFcn',@guiupdate,...
-            %    'InstantPeriod',1);            
-            %self.timerS.start();
+           
         end
         function setupUI(self)
             self.h_fig= figure();
-            maxfig(self.h_fig,1);
             self.h_ax= axes();
+            
+            self.h_bt= uicontrol('parent',self.h_fig,'units','normalized',...
+                'position',[0.4 0.05 0.3 0.1],'style','pushbutton',...
+                'string','Get Points', 'callback',@self.getPoints);
             %% plot now
             self.plotnow();
             %% setup callback
@@ -36,6 +37,12 @@ classdef SplineGUI < handle
             set(self.h_fig,'WindowButtonDownFcn',@self.mouseDown);
             
         end
+        
+        %% callback getPoints
+        function getPoints(self,src,ev)
+        
+        end
+        
         function plotnow(self)
             if ishandle(self.h_plt_ctrlpt), delete(self.h_plt_ctrlpt); end
             if ishandle(self.h_plt_line), delete(self.h_plt_line); end
