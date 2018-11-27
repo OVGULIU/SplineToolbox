@@ -18,6 +18,7 @@ classdef BsplineGUI < handle
         h_plt_ctrlpt
         h_plt_hpt % highlighted point
         ind_hpt   % highelighted point index
+        dragMode;
         timerS
         
     end
@@ -83,7 +84,7 @@ classdef BsplineGUI < handle
             %% setup callback
             set(self.h_fig,'WindowButtonMotionFcn',@self.mouseMove);
             set(self.h_fig,'WindowButtonDownFcn',@self.mouseDown);
-            
+            set(self.h_fig,'WindowButtonUpFcn',@self.mouseUp);            
         end
         
         %% callback change bspline order
@@ -171,62 +172,65 @@ classdef BsplineGUI < handle
                         
         end
         function mouseMove(self,hobj,evt)
-            % delete highlighted line first
-            if ishandle(self.h_plt_hpt), delete(self.h_plt_hpt); end
-            % update current point
-            C= get(self.h_ax,'CurrentPoint');
-            title(self.h_ax,sprintf('(X,Y)=(%8.4f,%8.4f)',...
-                C(1,1),C(1,2)));
-            % detect whether to snap a point
-            xlim= get(self.h_ax,'xlim');
-            ylim= get(self.h_ax,'ylim');
-            tol= norm([(xlim(end)-xlim(1)) (ylim(end)-ylim(1))])/20;
-            for i=1:length(self.xdata)
-                xnow= self.xdata(i);
-                ynow= self.ydata(i);
-                dist= norm(C(1,1:2)-[xnow,ynow]);
-                if dist < tol
-                    self.h_plt_hpt= plot(self.h_ax,xnow,ynow,'ro',...
-                        'markersize',12);
-                    self.ind_hpt= i;
-                    % set context menu
-                    set(self.h_plt_hpt,'uicontextmenu',self.h_cm(1));
-                    break;
-                end 
+            if self.dragMode
+                % update current point title
+                C= get(self.h_ax,'CurrentPoint');
+                title(self.h_ax,sprintf('(X,Y)=(%8.4f,%8.4f)',...
+                    C(1,1),C(1,2)));
+                % updata highlighted point plot
+                set(self.h_plt_hpt,'xdata',C(1,1));
+                set(self.h_plt_hpt,'ydata',C(1,2));
+                % update control points data and plot
+                self.xdata(self.ind_hpt)= C(1,1);
+                self.ydata(self.ind_hpt)= C(1,2);
+                set(self.h_plt_ctrlpt,'xdata', self.xdata);
+                set(self.h_plt_ctrlpt,'ydata', self.ydata); 
+            else
+                % delete highlighted line first
+                %if ishandle(self.h_plt_hpt), delete(self.h_plt_hpt); end
+                % update current point
+                C= get(self.h_ax,'CurrentPoint');
+                title(self.h_ax,sprintf('(X,Y)=(%8.4f,%8.4f)',...
+                    C(1,1),C(1,2)));
+                % detect whether to snap a point
+                xlim= get(self.h_ax,'xlim');
+                ylim= get(self.h_ax,'ylim');
+                tol= norm([(xlim(end)-xlim(1)) (ylim(end)-ylim(1))])/20;
+                for i=1:length(self.xdata)
+                    xnow= self.xdata(i);
+                    ynow= self.ydata(i);
+                    dist= norm(C(1,1:2)-[xnow,ynow]);
+                    if dist < tol
+                        if ishandle(self.h_plt_hpt)
+                            % updata highlighted point plot
+                            set(self.h_plt_hpt,'xdata',xnow);
+                            set(self.h_plt_hpt,'ydata',ynow);
+                        else
+                            self.h_plt_hpt= plot(self.h_ax,xnow,ynow,'ro',...
+                                'markersize',12);
+                        end
+                        self.ind_hpt= i;
+                        % set context menu
+                        set(self.h_plt_hpt,'uicontextmenu',self.h_cm(1));
+                        break;
+                    end 
+                end
             end
         end
         function mouseDown(self,hobj,evt)
             if ishandle(self.h_plt_hpt)  % if picked
-                stype= get(self.h_fig,'selectionType');
-                if strcmp(stype,'normal') % left click
-                   set(self.h_fig,'WindowButtonMotionFcn',@self.mouseDrag);
-                   set(self.h_fig,'WindowButtonUpFcn',@self.mouseUp);
-                end                    
-            end
+                self.dragMode= true;                                  
+            end            
         end
-        function mouseDrag(self,hobj,evt)
-            % update current point title
-            C= get(self.h_ax,'CurrentPoint');
-            title(self.h_ax,sprintf('(X,Y)=(%8.4f,%8.4f)',...
-                C(1,1),C(1,2)));
-            % updata highlighted point plot
-            set(self.h_plt_hpt,'xdata',C(1,1));
-            set(self.h_plt_hpt,'ydata',C(1,2));
-            % update control points data and plot
-            self.xdata(self.ind_hpt)= C(1,1);
-            self.ydata(self.ind_hpt)= C(1,2);
-            set(self.h_plt_ctrlpt,'xdata', self.xdata);
-            set(self.h_plt_ctrlpt,'ydata', self.ydata);            
-        end
+        
         function mouseUp(self,hobj,evt)
-            % reset spline model
-            self.cs = bspline(self.xdata, self.ydata, self.order);
-           
-            % plot now
-            self.plotnow;
-            % reset WindowButton functions
-            set(self.h_fig,'WindowButtonMotionFcn',@self.mouseMove);
-            set(self.h_fig,'WindowButtonUpFcn',[]);            
+            if self.dragMode
+                % reset spline model
+                self.cs = bspline(self.xdata, self.ydata, self.order);
+                % plot now
+                self.plotnow();
+                self.dragMode= false;
+            end            
         end
             
     end
