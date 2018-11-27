@@ -40,8 +40,8 @@ To plot the curve:
 ```
 plot(xy_out)
 ```
-!(bspline)[./images/bspline.png]
+![bspline](./images/bspline.png)
  
 A test GUI is also provided, run **test_spline.m** to start the GUI
-!(bspline_gui)[./images/bspline_gui.png]
+![bspline_gui](./images/bspline_gui.png)
 
