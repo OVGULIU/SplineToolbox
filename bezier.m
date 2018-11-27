@@ -16,8 +16,15 @@ classdef bezier
             self.nCtrlPt= length(xc);
         end
         % evaluate x,y according vector parameter t:[0,1]    
-        function Bout= ppval(self,tvec)
+        function Bout= ppval_tvec(self,tvec)
             nt= length(tvec);
+            Bout= zeros(nt,2);
+            for i=1:nt
+                Bout(i,:)= self.ppval1(tvec(i));
+            end            
+        end
+        function Bout= ppval(self,nt)
+            tvec= linspace(0,1,nt);
             Bout= zeros(nt,2);
             for i=1:nt
                 Bout(i,:)= self.ppval1(tvec(i));
